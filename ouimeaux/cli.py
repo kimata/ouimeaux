@@ -5,6 +5,7 @@ import argparse
 
 from .discovery import UPnPLoopbackException
 from .environment import Environment
+from .device.insight import Insight
 from .config import get_cache, in_home, WemoConfiguration
 from .utils import matcher
 
@@ -106,6 +107,19 @@ def status(args):
     scan(args, on_switch, on_motion)
 
 
+def insight(args):
+    def on_switch(switch):
+        if not isinstance(switch, Insight):
+            return
+        print "Switch: %s\tInstantPower: %.1f" % \
+            (switch.name, float(switch.current_power['InstantPower'])/1000)
+
+    def on_motion(motion):
+        pass
+
+    scan(args, on_switch, on_motion)
+
+
 def clear(args):
     for fname in 'cache', 'cache.db':
         filename = in_home('.wemo', fname)
@@ -168,6 +182,10 @@ def wemo():
     statusparser = subparsers.add_parser("status", 
                                          help="Print status of WeMo devices")
     statusparser.set_defaults(func=status)
+
+    insightparser = subparsers.add_parser("insight",
+                                         help="Print insight of WeMo devices")
+    insightparser.set_defaults(func=insight)
 
     stateparser = subparsers.add_parser("switch",
                                         help="Turn a WeMo Switch on or off")
